@@ -1,0 +1,37 @@
+#!/bin/sh
+
+export BASE="$(dirname $0)"
+export SERVER_NAME="bigIp"
+export TZ=GMT
+export HOST="$(hostname)"
+
+LIB=$(find /usr/lib -name '*mod_env*')
+export HTTP_LIBS=$(dirname $LIB)
+
+if [ -x /usr/sbin/apache2 ]
+then 
+   HTTP_BINARY="/usr/sbin/apache2";
+elif [ -x /usr/sbin/httpd2 ]
+then
+   HTTP_BINARY="/usr/sbin/httpd2";
+else
+   HTTP_BINARY="/usr/sbin/httpd";
+fi
+
+APP_BASE=$(pwd)
+
+try_start() {
+    name="$1"; shift
+    command="$1"; shift
+
+    echo "Starting $name..."
+    if bash -c "$command"; then echo " OK."; else echo " ERROR."; fi
+}
+
+$BASE/stop
+
+cd "$BASE" &&
+try_start "Spoof BigIP" \
+	"$HTTP_BINARY -d `pwd` -D $HOST -D x86_64 -D DEV  -f $BASE/conf/httpd-spoof-bigip.conf"
+
+$BASE/status

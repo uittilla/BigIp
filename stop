@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+export BASE="$(dirname $0)"
+ARCH=`uname`
+MACHINE=`hostname`
+
+if [[ "$ARCH" = "SunOS" ]]; then
+    ECHO_NO_LF="/usr/ucb/echo -n"
+elif [[ "$ARCH" = "Linux" ]]; then
+    ECHO_NO_LF="echo -n"
+else
+    ECHO_NO_LF="echo"   # failsafe
+fi
+
+stop_by_pidfile () {
+    pidfile="$1"; shift
+    name="$1";    shift
+    pid=`cat "$pidfile" 2>/dev/null`
+    $ECHO_NO_LF "Stopping $name..."
+    stop_pid "$pid"
+}
+
+stop_by_pid () {
+    pid="$1"; shift
+    name="$1";    shift
+    $ECHO_NO_LF "Stopping $name..."
+    stop_pid "$pid"
+}
+
+stop_pid () {
+    pid="$1"; shift
+    if [[ -n "$pid" ]]; then
+        if kill -TERM "$pid"; then
+            echo " OK."
+            n_tries=0
+            while [[ $n_tries -lt 5 ]]; do
+                sleep 1
+                if kill -0 "$pid" 2>/dev/null; then
+                    true;
+                else
+                    n_tries=5   # end loop
+                fi
+                (( n_tries = n_tries + 1 ))
+            done
+        else
+            echo " ERROR."
+        fi
+    else
+        echo " not running."
+    fi
+}
+
+BIGIP_PIDFILE=$BASE/httpd.pid
+
+stop_by_pidfile "$BIGIP_PIDFILE" "Spoof BigIP"
+

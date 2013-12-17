@@ -1,0 +1,70 @@
+#
+# $host  => hostname
+# $port  => connection port
+# $dir   => docroot
+# $rport => redirect port
+#
+<Macro VHost $host $port $dir $rport>
+ <VirtualHost *:$port>
+
+    ServerName   $host
+    ServerAlias  $host
+    DocumentRoot $dir
+
+    <Directory "/">
+        Options +ExecCGI +FollowSymLinks +MultiViews +Includes -Indexes
+        Order deny,allow
+        Deny from all
+    </Directory>
+
+    <Directory $dir>
+        Options +ExecCGI +FollowSymLinks +MultiViews +Includes -Indexes
+        Order allow,deny
+        Allow from all
+        AllowOverride All
+    </Directory>
+
+    TransferLog "|/usr/bin/cronolog /export/bigIP/logs/eu/%Y/%m/%d/spoofBigIp_access_log"
+    ErrorLog    "|/usr/bin/cronolog /export/bigIP/logs/eu/%Y/%m/%d/spoofBigIp_error_log"
+
+    ProxyRequests Off
+    RewriteEngine On
+
+    RewriteRule ^/(.*) http://127.0.0.1:$rport/$1 [P]
+    ProxyPassReverse /  http://127.0.0.1:$rport/
+    ProxyPreserveHost On
+
+    SetOutputFilter DEFLATE
+    SetEnv gzip-only-text/html 1
+    header append Vary User-Agent env=!dont-vary
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+
+ </VirtualHost>
+ 
+#### host:80 ####
+
+Use VHost dev.www.manheim.co.uk				80 /export/mol-uk/manheim.co.uk	      8000	
+
+Use VHost dev.www.manheim.fr 				80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.manheim.de 				80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.manheim.es 				80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.manheim.pt 				80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.manheim.it 				80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.manheim.be 				80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.manheim.eu 				80 /export/manheimdirect.com/docroot  7000
+
+Use VHost dev.www.falfleetvo.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.chryslerespana.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.fiat-cyberstock.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.hyundaiespana.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.mercedes-benz-industrialesespana.com 	80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.nreestreno.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.peugeot-cyberstock.com 		80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.spainusedvans.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.stockempleados.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.tfs-cars.com 				80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.toyotaespana.com 			80 /export/manheimdirect.com/docroot  7000
+Use VHost dev.www.ventesvo.ingcarlease.fr 		80 /export/manheimdirect.com/docroot  7000
+
+Use VHost intl-docs.ukleelx01.manheim.co.uk		80 /export/docs/docroot 	      8090
+
